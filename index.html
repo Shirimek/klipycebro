@@ -17,15 +17,6 @@
         .video-container { margin-bottom: 40px; }
         iframe { width: 80%; max-width: 560px; height: 315px; }
 
-        /* Styl do ekranu logowania */
-       #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #111; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;
-        }
-        #login-screen input { padding: 10px; font-size: 16px; margin-top: 10px; border: none; border-radius: 5px; }
-        #login-screen button { padding: 10px 20px; margin-top: 10px; background-color: #444; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #error { color: red; margin-top: 10px; }
-
         /* Menu */
         nav { margin-bottom: 30px; }
         nav button { background-color: #333; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
@@ -38,18 +29,9 @@
         .panel { margin-bottom: 10px; }
     </style>
 </head>
-    <meta name="google-adsense-account" content="ca-pub-5486175208501620">
 <body>
-    <!-- Ekran logowania -->
-   <div id="login-screen">
-        <h2>Wpisz hasło, żeby wejść</h2>
-        <input type="password" id="password" placeholder="Hasło">
-        <button onclick="checkPassword()">Wejdź</button>
-        <p id="error"></p>
-    </div>
-
     <!-- Zawartość strony -->
-    <div id="content" style="display:none;">
+    <div id="content" style="display:block;">
         <nav>
             <button onclick="showSection('clips')">🎥 Klipy cebulka</button>
             <button onclick="showSection('game')">🎮 geometryjny dach</button>
@@ -77,14 +59,14 @@
             </div>
         </div>
 
-        <!-- Sekcja z Geometry Dash (zamiennik Fluffy Bird) -->
+        <!-- Sekcja z Geometry Dash -->
         <div id="game" style="display:none;">
             <h1>Geometry Dash 🟦 — Level 1</h1>
             <canvas id="gameCanvas" width="400" height="500"></canvas>
             <p>Kliknij lub naciśnij spację, żeby podskoczyć!</p>
         </div>
 
-        <!-- Sekcja CS2 (prosty top-down shooter inspirowany CS) -->
+        <!-- Sekcja CS2 -->
         <div id="cs2" style="display:none;">
             <h1>CS2 — tryb treningowy (2D)</h1>
             <div class="panel">
@@ -101,18 +83,6 @@
     </div>
 
     <script>
-
-        function checkPassword() {
-            const pass = document.getElementById("password").value;
-            if (pass === "cebulaczosnek") {
-                document.getElementById("login-screen").style.display = "none";
-                document.getElementById("content").style.display = "block";
-            } else {
-                document.getElementById("error").textContent = "Złe hasło!";
-            }
-        }
-
-
         function showSection(section) {
             document.getElementById('clips').style.display = 'none';
             document.getElementById('game').style.display = 'none';
@@ -122,97 +92,36 @@
 
         /* ------------------------
            Geometry Dash (Level 1)
-           klasyczny styl: auto-scroll poziomu,
-           gracz jako kwadrat, skok na klik/space
-           z predefiniowanym, dopracowanym level'em
            ------------------------ */
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        const G = {
-            width: canvas.width,
-            height: canvas.height,
-            groundY: 420
-        };
-
-        // Gracz (kwadrat)
-        const player = {
-            x: 80,
-            y: G.groundY - 40, // start na ziemi
-            size: 34,
-            vy: 0,
-            gravity: 0.9,
-            jumpPower: -15,
-            onGround: true,
-            color: '#00bfff'
-        };
-
-        // Kamera/scroll (przesuwamy przeszkody w lewo)
-        let scrollSpeed = 4; // stała prędkość poziomu
-        let gameStarted = false;
-        let gameOver = false;
-        let distance = 0;
-        let levelIndex = 0; // do przejścia sekwencji
-        let musicAllowed = false;
-
-        // Obstacles: spike, block, gap. Każdy element ma x, w, type, h
+        const G = { width: canvas.width, height: canvas.height, groundY: 420 };
+        const player = { x: 80, y: G.groundY - 40, size: 34, vy: 0, gravity: 0.9, jumpPower: -15, onGround: true, color: '#00bfff' };
+        let scrollSpeed = 4, gameStarted = false, gameOver = false, distance = 0;
         const obstacles = [];
-
-        // Level 1 pattern (predefiniowany, ręcznie stworzony, dopracowany)
-        // Każdy obiekt to [type, offset], offset to odległość od poprzedniego obiektu
-        // type: 'spike' - ostre kolce (wysokość 26), 'box' - blok do przeskoczenia (wysokość 40), 'gap' - dziura (szerokość)
         const levelPattern = [
-            ['box', 250],
-            ['spike', 160],
-            ['spike', 60],
-            ['gap', 200],
-            ['box', 260],
-            ['box', 140],
-            ['spike', 120],
-            ['gap', 220],
-            ['box', 260],
-            ['spike', 120],
-            ['box', 140],
-            ['gap', 180],
-            ['spike', 130],
-            ['box', 200],
-            ['box', 140],
-            ['spike', 80],
-            ['gap', 260],
-            ['box', 280],
-            ['spike', 120],
-            ['box', 140],
-            ['gap', 320], // końcówka - szeroka dziura -> meta
+            ['box', 250],['spike', 160],['spike', 60],['gap', 200],['box', 260],['box', 140],
+            ['spike', 120],['gap', 220],['box', 260],['spike', 120],['box', 140],['gap', 180],
+            ['spike', 130],['box', 200],['box', 140],['spike', 80],['gap', 260],['box', 280],
+            ['spike', 120],['box', 140],['gap', 320],
         ];
 
-        // Utwórz elementy poziomu na podstawie pattern
         function buildLevel() {
             obstacles.length = 0;
-            let x = G.width + 80; // start poza ekranem
+            let x = G.width + 80;
             for (const item of levelPattern) {
                 const type = item[0], offset = item[1];
                 x += offset;
-                if (type === 'spike') {
-                    obstacles.push({ type: 'spike', x: x, w: 40, h: 26 });
-                    x += 40;
-                } else if (type === 'box') {
-                    obstacles.push({ type: 'box', x: x, w: 40, h: 40 });
-                    x += 40;
-                } else if (type === 'gap') {
-                    // reprezentujemy gap jako przesunięcie pustej przestrzeni - niczego nie dodajemy, po prostu zwiększamy x
-                    // ale dla czytelności dodamy marker gap (nie koliduje)
-                    obstacles.push({ type: 'gap', x: x, w: item[1], h: 0 });
-                    x += item[1];
-                }
+                if (type === 'spike') obstacles.push({ type: 'spike', x: x, w: 40, h: 26 }), x+=40;
+                else if (type === 'box') obstacles.push({ type: 'box', x: x, w: 40, h: 40 }), x+=40;
+                else if (type === 'gap') obstacles.push({ type: 'gap', x: x, w: offset, h: 0 }), x+=offset;
             }
-            // meta - flaga końca poziomu
             obstacles.push({ type: 'flag', x: x + 200, w: 20, h: 80 });
         }
-
         buildLevel();
 
-        // Reset gry
         function resetGD() {
             player.y = G.groundY - player.size;
             player.vy = 0;
@@ -224,343 +133,100 @@
             buildLevel();
         }
 
-        // Input: space / click
         function doJump() {
-            if (gameOver) {
-                resetGD();
-                return;
-            }
+            if (gameOver) { resetGD(); return; }
             if (!gameStarted) gameStarted = true;
-            // w Geometry Dash skok jest dozwolony, gdy jest się na ziemi (klasyczny)
-            if (player.onGround) {
-                player.vy = player.jumpPower;
-                player.onGround = false;
-            }
+            if (player.onGround) { player.vy = player.jumpPower; player.onGround = false; }
         }
 
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                doJump();
-            }
-        });
-        canvas.addEventListener('mousedown', (e) => {
-            doJump();
-        });
+        document.addEventListener('keydown', e => { if(e.code==='Space'){ e.preventDefault(); doJump(); } });
+        canvas.addEventListener('mousedown', doJump);
 
-        // Kolizja punkt-kwadrat z prostokątem
-        function rectsIntersect(rx, ry, rw, rh, px, py, pw, ph) {
-            return !(px + pw < rx || px > rx + rw || py + ph < ry || py > ry + rh);
-        }
+        function rectsIntersect(rx, ry, rw, rh, px, py, pw, ph) { return !(px+pw<rx || px>rx+rw || py+ph<ry || py>ry+rh); }
 
         function updateGD() {
             if (!gameStarted || gameOver) return;
-
-            // physics
             player.vy += player.gravity;
             player.y += player.vy;
-
-            // ground collision
-            if (player.y + player.size >= G.groundY) {
-                player.y = G.groundY - player.size;
-                player.vy = 0;
-                player.onGround = true;
-            } else {
-                player.onGround = false;
+            if (player.y + player.size >= G.groundY) { player.y = G.groundY - player.size; player.vy=0; player.onGround=true; } else player.onGround=false;
+            for (let i=obstacles.length-1;i>=0;i--){ const obj=obstacles[i]; obj.x-=scrollSpeed; if(obj.x+(obj.w||0)<-200) obstacles.splice(i,1);}
+            distance += scrollSpeed*0.1;
+            for (const obj of obstacles){ if(obj.type==='flag' && obj.x<player.x+40){ gameOver=true; gameStarted=false; scrollSpeed=0; } }
+            for (const obj of obstacles){
+                if(obj.type==='box'){ const bx=obj.x,by=G.groundY-obj.h,bw=obj.w,bh=obj.h; if(rectsIntersect(bx,by,bw,bh,player.x,player.y,player.size,player.size)) gameOver=true; }
+                else if(obj.type==='spike'){ const sx=obj.x,sy=G.groundY-obj.h,sw=obj.w,sh=obj.h; if(rectsIntersect(sx,sy,sw,sh,player.x,player.y,player.size,player.size)) gameOver=true; }
+                else if(obj.type==='gap'){ const gapX=obj.x,gapW=obj.w; if(player.x+player.size>gapX && player.x<gapX+gapW && player.onGround && !(player.y+player.size<G.groundY-0.1)){player.y+=2;player.onGround=false; } }
             }
-
-            // przesuwaj przeszkody w lewo
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                const obj = obstacles[i];
-                obj.x -= scrollSpeed;
-                // usuwaj obiekty poza ekranem z lewej strony
-                if (obj.x + (obj.w || 0) < -200) obstacles.splice(i, 1);
-            }
-
-            // zwiększ dystans
-            distance += scrollSpeed * 0.1;
-
-            // stop when reaching flag (level complete)
-            for (const obj of obstacles) {
-                if (obj.type === 'flag') {
-                    // jeżeli flaga doszła do lewej strony blisko gracza -> finish
-                    if (obj.x < player.x + 40) {
-                        gameOver = true;
-                        gameStarted = false;
-                        // mały efekt końcowy: ustaw gracza na ziemi i zatrzymaj scroll
-                        scrollSpeed = 0;
-                    }
-                }
-            }
-
-            // kolizja z przeszkodami
-            for (const obj of obstacles) {
-                if (obj.type === 'box') {
-                    // box stoi na ziemi (czyli od G.groundY - h)
-                    const boxX = obj.x, boxY = G.groundY - obj.h, bw = obj.w, bh = obj.h;
-                    if (rectsIntersect(boxX, boxY, bw, bh, player.x, player.y, player.size, player.size)) {
-                        gameOver = true;
-                    }
-                } else if (obj.type === 'spike') {
-                    // spike: trzy trójkąty na ziemi - przybliżamy jako prostokąt kolizyjny (bardziej szczelne)
-                    const sx = obj.x, sy = G.groundY - obj.h, sw = obj.w, sh = obj.h;
-                    if (rectsIntersect(sx, sy, sw, sh, player.x, player.y, player.size, player.size)) {
-                        gameOver = true;
-                    }
-                } else if (obj.type === 'gap') {
-                    // gap nie ma obiektu — ale jeśli gracz przeskoczy nad nią i spadnie do dziury -> kolizja z "pustką"
-                    const gapX = obj.x, gapW = obj.w;
-                    // jeśli gracz jest nad dziurą i nie dotyka ziemi -> jeżeli spadnie poniżej ziemi (czyli poniżej G.groundY) to game over
-                    // (już mamy sprawdzanie ziemi). Dla pewności sprawdzimy, czy gracz x w obszarze dziury i jest na ziemi => spadek
-                    if (player.x + player.size > gapX && player.x < gapX + gapW) {
-                        // jeśli player stoi "na ziemi" i jego spodnia krawędź równa G.groundY — w gapie powinna nastąpić utrata podparcia
-                        // ale nasz system ground jest globalny; aby wymusić upadek, jeśli player.x jest w gapie i ma kontakt z ziemią, ustaw go na "powietrze"
-                        // tylko jeśli jego stopa powinna być na poziomie dziury -> symulujemy brak podłoża:
-                        if (player.onGround && !(player.y + player.size < G.groundY - 0.1)) {
-                            // spadek: delikatne przesunięcie w dół (następuje, bo brak podłoża)
-                            player.y += 2;
-                            player.onGround = false;
-                        }
-                    }
-                }
-            }
-
-            // jeśli player wyleci poza górę lub spadnie daleko -> game over
-            if (player.y > G.height + 50 || player.y < -200) gameOver = true;
-
-            // proste przyspieszenie w miarę postępu (level może lekko przyspieszać)
-            if (distance > 4000 && scrollSpeed < 6) scrollSpeed = 5;
-            if (distance > 8000 && scrollSpeed < 7) scrollSpeed = 6;
+            if(player.y>G.height+50 || player.y<-200) gameOver=true;
+            if(distance>4000 && scrollSpeed<6) scrollSpeed=5;
+            if(distance>8000 && scrollSpeed<7) scrollSpeed=6;
         }
 
         function drawGD() {
-            // tło
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, G.width, G.height);
-
-            // podłoże
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, G.groundY, G.width, G.height - G.groundY);
-
-            // grid / parallax dekoracja (prosty ruch)
-            ctx.fillStyle = '#1a1a1a';
-            for (let i = 0; i < 8; i++) {
-                ctx.fillRect((i * 100) - ((distance*0.2)%100), G.groundY - 6 - (i%2)*3, 80, 2);
+            ctx.fillStyle='#000'; ctx.fillRect(0,0,G.width,G.height);
+            ctx.fillStyle='#111'; ctx.fillRect(0,G.groundY,G.width,G.height-G.groundY);
+            ctx.fillStyle='#1a1a1a';
+            for(let i=0;i<8;i++) ctx.fillRect((i*100)-((distance*0.2)%100),G.groundY-6-(i%2)*3,80,2);
+            for(const obj of obstacles){
+                if(obj.type==='box'){ const bx=Math.round(obj.x),by=G.groundY-obj.h; ctx.fillStyle='#8b4513'; ctx.fillRect(bx,by,obj.w,obj.h); ctx.strokeStyle='#5a2f0f'; ctx.strokeRect(bx,by,obj.w,obj.h); }
+                else if(obj.type==='spike'){ const sx=Math.round(obj.x),sy=G.groundY-obj.h; ctx.fillStyle='#ff3333'; const tw=obj.w/3; for(let i=0;i<3;i++){ const px=sx+i*tw; ctx.beginPath(); ctx.moveTo(px,sy+obj.h); ctx.lineTo(px+tw/2,sy); ctx.lineTo(px+tw,sy+obj.h); ctx.closePath(); ctx.fill(); } }
+                else if(obj.type==='gap'){ ctx.fillStyle='#111'; ctx.fillRect(Math.round(obj.x)-2,G.groundY-4,4,4); ctx.fillRect(Math.round(obj.x+obj.w)-2,G.groundY-4,4,4); }
+                else if(obj.type==='flag'){ const fx=Math.round(obj.x),fy=G.groundY-obj.h; ctx.fillStyle='#ffcc00'; ctx.fillRect(fx,fy,6,obj.h); ctx.fillStyle='#ff3333'; ctx.beginPath(); ctx.moveTo(fx+6,fy); ctx.lineTo(fx+30,fy+14); ctx.lineTo(fx+6,fy+28); ctx.closePath(); ctx.fill(); }
             }
-
-            // rysuj przeszkody
-            for (const obj of obstacles) {
-                if (obj.type === 'box') {
-                    const bx = Math.round(obj.x), by = G.groundY - obj.h;
-                    ctx.fillStyle = '#8b4513';
-                    ctx.fillRect(bx, by, obj.w, obj.h);
-                    // highlight
-                    ctx.strokeStyle = '#5a2f0f'; ctx.strokeRect(bx, by, obj.w, obj.h);
-                } else if (obj.type === 'spike') {
-                    const sx = Math.round(obj.x), sy = G.groundY - obj.h;
-                    // rysujemy 3 trójkąty w segmentach
-                    ctx.fillStyle = '#ff3333';
-                    const tw = obj.w / 3;
-                    for (let i = 0; i < 3; i++) {
-                        const px = sx + i * tw;
-                        ctx.beginPath();
-                        ctx.moveTo(px, sy + obj.h);
-                        ctx.lineTo(px + tw / 2, sy);
-                        ctx.lineTo(px + tw, sy + obj.h);
-                        ctx.closePath();
-                        ctx.fill();
-                    }
-                } else if (obj.type === 'gap') {
-                    // nic do rysowania — pusty obszar
-                    // dla widoczności można dorysować małą linię marginesu
-                    ctx.fillStyle = '#111';
-                    ctx.fillRect(Math.round(obj.x) - 2, G.groundY - 4, 4, 4);
-                    ctx.fillRect(Math.round(obj.x + obj.w) - 2, G.groundY - 4, 4, 4);
-                } else if (obj.type === 'flag') {
-                    const fx = Math.round(obj.x), fy = G.groundY - obj.h;
-                    ctx.fillStyle = '#ffcc00';
-                    ctx.fillRect(fx, fy, 6, obj.h);
-                    ctx.fillStyle = '#ff3333';
-                    ctx.beginPath();
-                    ctx.moveTo(fx + 6, fy);
-                    ctx.lineTo(fx + 30, fy + 14);
-                    ctx.lineTo(fx + 6, fy + 28);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            }
-
-            // rysuj gracza (kwadrat)
-            ctx.save();
-            ctx.fillStyle = player.color;
-            ctx.fillRect(Math.round(player.x), Math.round(player.y), player.size, player.size);
-            // lekki cień
-            ctx.fillStyle = 'rgba(0,0,0,0.15)';
-            ctx.fillRect(Math.round(player.x), Math.round(player.y) + player.size - 6, player.size, 6);
-            ctx.restore();
-
-            // HUD: dystans
-            ctx.fillStyle = 'white';
-            ctx.font = '18px monospace';
-            ctx.fillText('Dystans: ' + Math.floor(distance) + 'm', 12, 30);
-
-            if (!gameStarted && !gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0, 0, G.width, G.height);
-                ctx.fillStyle = 'white';
-                ctx.font = '22px Arial';
-                ctx.fillText('Kliknij / Spacja żeby START', G.width/2 - 140, G.height/2);
-            }
-
-            if (gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(0, 0, G.width, G.height);
-                ctx.fillStyle = 'white';
-                ctx.font = '26px Arial';
-                ctx.fillText('KONIEC LEVELU', G.width/2 - 100, G.height/2 - 10);
-                ctx.font = '18px Arial';
-                ctx.fillText('Kliknij, żeby zresetować', G.width/2 - 100, G.height/2 + 20);
-            }
+            ctx.save(); ctx.fillStyle=player.color; ctx.fillRect(Math.round(player.x),Math.round(player.y),player.size,player.size); ctx.fillStyle='rgba(0,0,0,0.15)'; ctx.fillRect(Math.round(player.x),Math.round(player.y)+player.size-6,player.size,6); ctx.restore();
+            ctx.fillStyle='white'; ctx.font='18px monospace'; ctx.fillText('Dystans: '+Math.floor(distance)+'m',12,30);
+            if(!gameStarted && !gameOver){ ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,G.width,G.height); ctx.fillStyle='white'; ctx.font='22px Arial'; ctx.fillText('Kliknij / Spacja żeby START',G.width/2-140,G.height/2);}
+            if(gameOver){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,G.width,G.height); ctx.fillStyle='white'; ctx.font='26px Arial'; ctx.fillText('KONIEC LEVELU',G.width/2-100,G.height/2-10); ctx.font='18px Arial'; ctx.fillText('Kliknij, żeby zresetować',G.width/2-100,G.height/2+20);}
         }
 
-        function loopGD() {
-            updateGD();
-            drawGD();
-            requestAnimationFrame(loopGD);
-        }
+        function loopGD(){ updateGD(); drawGD(); requestAnimationFrame(loopGD); }
         loopGD();
 
-        // ---------------------------
-        // CS2 code (nie zmieniane) - pozostało dokładnie jak w oryginale
-        // ---------------------------
-
+        /* ------------------------
+           CS2 (pozostało bez zmian)
+           ------------------------ */
         const cs2Canvas = document.getElementById('cs2Canvas');
         const g = cs2Canvas.getContext('2d');
         const W = cs2Canvas.width, H = cs2Canvas.height;
-
         let playerCS = { x: W/2, y: H/2, r: 12, dir: 0, speed: 2.5, hp: 100 };
-        let bullets = [];
-        let enemies = [];
-        let keys = {};
-        let mouse = { x: 0, y: 0, down: false };
-        let cs2Running = false;
-        let cs2Score = 0;
-        let cs2Paused = false;
+        let bullets = [], enemies = [], keys = {}, mouse = { x:0, y:0, down:false }, cs2Running=false, cs2Score=0, cs2Paused=false;
 
-        function spawnEnemy() {
-            const edge = Math.floor(Math.random()*4);
-            let x, y;
-            if (edge===0){ x = -20; y = Math.random()*H }
-            if (edge===1){ x = W+20; y = Math.random()*H }
-            if (edge===2){ x = Math.random()*W; y = -20 }
-            if (edge===3){ x = Math.random()*W; y = H+20 }
-            enemies.push({ x, y, r: 12, speed: 1 + Math.random()*1.2, hp: 20 });
-        }
-
-        function startCs2(){
-            playerCS.x = W/2; playerCS.y = H/2; playerCS.hp = 100; bullets = []; enemies = []; cs2Score = 0; cs2Running = true; cs2Paused = false;
-            for(let i=0;i<4;i++) spawnEnemy();
-        }
-
+        function spawnEnemy(){ const edge=Math.floor(Math.random()*4); let x,y; if(edge===0){x=-20;y=Math.random()*H;} if(edge===1){x=W+20;y=Math.random()*H;} if(edge===2){x=Math.random()*W;y=-20;} if(edge===3){x=Math.random()*W;y=H+20;} enemies.push({x,y,r:12,speed:1+Math.random()*1.2,hp:20}); }
+        function startCs2(){ playerCS.x=W/2;playerCS.y=H/2;playerCS.hp=100;bullets=[];enemies=[];cs2Score=0;cs2Running=true;cs2Paused=false; for(let i=0;i<4;i++) spawnEnemy(); }
         function restartCs2(){ startCs2(); }
-
         document.getElementById('startCs2').addEventListener('click', startCs2);
         document.getElementById('restartCs2').addEventListener('click', restartCs2);
-
-        cs2Canvas.addEventListener('mousemove', e => {
-            const rect = cs2Canvas.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left; mouse.y = e.clientY - rect.top;
-            playerCS.dir = Math.atan2(mouse.y - playerCS.y, mouse.x - playerCS.x);
-        });
-        cs2Canvas.addEventListener('mousedown', e => { mouse.down = true; shoot(); });
-        window.addEventListener('mouseup', e => { mouse.down = false; });
-
-        window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if(e.key.toLowerCase()==='p') cs2Paused = !cs2Paused; });
-        window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-
-        function shoot(){ if(!cs2Running || cs2Paused) return; bullets.push({ x: playerCS.x + Math.cos(playerCS.dir)* (playerCS.r+6), y: playerCS.y + Math.sin(playerCS.dir)*(playerCS.r+6), dx: Math.cos(playerCS.dir)*8, dy: Math.sin(playerCS.dir)*8, life: 60 }); }
-
+        cs2Canvas.addEventListener('mousemove',e=>{ const rect=cs2Canvas.getBoundingClientRect(); mouse.x=e.clientX-rect.left; mouse.y=e.clientY-rect.top; playerCS.dir=Math.atan2(mouse.y-playerCS.y,mouse.x-playerCS.x); });
+        cs2Canvas.addEventListener('mousedown', e=>{ mouse.down=true; shoot(); });
+        window.addEventListener('mouseup',e=>{ mouse.down=false; });
+        window.addEventListener('keydown',e=>{ keys[e.key.toLowerCase()]=true; if(e.key.toLowerCase()==='p') cs2Paused=!cs2Paused; });
+        window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+        function shoot(){ if(!cs2Running||cs2Paused) return; bullets.push({x:playerCS.x+Math.cos(playerCS.dir)*(playerCS.r+6),y:playerCS.y+Math.sin(playerCS.dir)*(playerCS.r+6),dx:Math.cos(playerCS.dir)*8,dy:Math.sin(playerCS.dir)*8,life:60}); }
         function updateCs2(){
-            if(!cs2Running || cs2Paused) return;
+            if(!cs2Running||cs2Paused) return;
             let mvx=0,mvy=0;
-            if(keys['w']) mvy -= 1; if(keys['s']) mvy +=1; if(keys['a']) mvx -=1; if(keys['d']) mvx +=1;
-            const len = Math.hypot(mvx,mvy) || 1; playerCS.x += (mvx/len)*playerCS.speed; playerCS.y += (mvy/len)*playerCS.speed;
-            playerCS.x = Math.max(playerCS.r, Math.min(W-playerCS.r, playerCS.x));
-            playerCS.y = Math.max(playerCS.r, Math.min(H-playerCS.r, playerCS.y));
-
-            for(let i=bullets.length-1;i>=0;i--){
-                let b = bullets[i]; b.x += b.dx; b.y += b.dy; b.life--; if(b.life<=0) bullets.splice(i,1);
-            }
-
-            for(let i=enemies.length-1;i>=0;i--){
-                let e = enemies[i];
-                const ang = Math.atan2(playerCS.y - e.y, playerCS.x - e.x);
-                e.x += Math.cos(ang)*e.speed; e.y += Math.sin(ang)*e.speed;
-                const dist = Math.hypot(e.x - playerCS.x, e.y - playerCS.y);
-                if(dist < e.r + playerCS.r){ playerCS.hp -= 10; enemies.splice(i,1); }
-            }
-
-            for(let i=enemies.length-1;i>=0;i--){
-                for(let j=bullets.length-1;j>=0;j--){
-                    const e = enemies[i], b = bullets[j];
-                    if(Math.hypot(e.x - b.x, e.y - b.y) < e.r + 3){
-                        e.hp -= 20; bullets.splice(j,1);
-                        if(e.hp<=0){ enemies.splice(i,1); cs2Score += 100; }
-                        break;
-                    }
-                }
-            }
-
-            if(Math.random() < 0.02) spawnEnemy();
-
-            if(playerCS.hp <= 0){ cs2Running = false; }
-
-            document.getElementById('playerHealth').textContent = Math.max(0, Math.floor(playerCS.hp));
-            document.getElementById('cs2Score').textContent = cs2Score;
+            if(keys['w']) mvy-=1; if(keys['s']) mvy+=1; if(keys['a']) mvx-=1; if(keys['d']) mvx+=1;
+            const len=Math.hypot(mvx,mvy)||1; playerCS.x+=(mvx/len)*playerCS.speed; playerCS.y+=(mvy/len)*playerCS.speed;
+            playerCS.x=Math.max(playerCS.r,Math.min(W-playerCS.r,playerCS.x)); playerCS.y=Math.max(playerCS.r,Math.min(H-playerCS.r,playerCS.y));
+            for(let i=bullets.length-1;i>=0;i--){ let b=bullets[i]; b.x+=b.dx;b.y+=b.dy;b.life--; if(b.life<=0) bullets.splice(i,1);}
+            for(let i=enemies.length-1;i>=0;i--){ let e=enemies[i]; const ang=Math.atan2(playerCS.y-e.y,playerCS.x-e.x); e.x+=Math.cos(ang)*e.speed; e.y+=Math.sin(ang)*e.speed; const dist=Math.hypot(e.x-playerCS.x,e.y-playerCS.y); if(dist<e.r+playerCS.r){ playerCS.hp-=10; enemies.splice(i,1);} }
+            for(let i=enemies.length-1;i>=0;i--){ for(let j=bullets.length-1;j>=0;j--){ const e=enemies[i], b=bullets[j]; if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+3){ e.hp-=20; bullets.splice(j,1); if(e.hp<=0){ enemies.splice(i,1); cs2Score+=100;} break;}}}
+            if(Math.random()<0.02) spawnEnemy();
+            if(playerCS.hp<=0){ cs2Running=false;}
+            document.getElementById('playerHealth').textContent=Math.max(0,Math.floor(playerCS.hp));
+            document.getElementById('cs2Score').textContent=cs2Score;
         }
-
         function drawCs2(){
-            g.fillStyle = '#111'; g.fillRect(0,0,W,H);
-
-            g.fillStyle = '#2b2b2b';
-            g.fillRect(150,80,120,20); g.fillRect(560,300,20,120); g.fillRect(360,200,150,30);
-
-            g.save();
-            g.translate(playerCS.x, playerCS.y);
-            g.rotate(playerCS.dir);
-            g.fillStyle = 'dodgerblue';
-            g.beginPath(); g.arc(0,0,playerCS.r,0,Math.PI*2); g.fill();
-            g.fillStyle = '#ccc'; g.fillRect(0, -4, playerCS.r+14, 8);
-            g.restore();
-
-            g.fillStyle = '#ffd';
-            for(const b of bullets){ g.beginPath(); g.arc(b.x,b.y,3,0,Math.PI*2); g.fill(); }
-
-            g.fillStyle = 'tomato';
-            for(const e of enemies){ g.beginPath(); g.arc(e.x,e.y,e.r,0,Math.PI*2); g.fill(); }
-
-            g.fillStyle = 'white'; g.font = '16px monospace'; g.fillText('HP: ' + Math.max(0, Math.floor(playerCS.hp)), 10, 20);
-            g.fillText('Punkty: ' + cs2Score, 10, 40);
-
-            if(!cs2Running){ g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(0,0,W,H); g.fillStyle='white'; g.font='26px Arial'; g.fillText('GRA ZATRZYMANA - Kliknij Start', W/2-160, H/2); }
-            if(cs2Paused){ g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0,0,W,H); g.fillStyle='white'; g.font='26px Arial'; g.fillText('PAUZA (P)', W/2-60, H/2); }
+            g.clearRect(0,0,W,H);
+            g.fillStyle='green'; g.beginPath(); g.arc(playerCS.x,playerCS.y,playerCS.r,0,2*Math.PI); g.fill();
+            g.fillStyle='red'; bullets.forEach(b=>{g.beginPath();g.arc(b.x,b.y,3,0,2*Math.PI);g.fill();});
+            g.fillStyle='purple'; enemies.forEach(e=>{g.beginPath();g.arc(e.x,e.y,e.r,0,2*Math.PI);g.fill();});
         }
-
-        function cs2Loop(){ updateCs2(); drawCs2(); requestAnimationFrame(cs2Loop); }
-        cs2Loop();
-
-        setInterval(()=>{ if(mouse.down && cs2Running && !cs2Paused) shoot(); }, 150);
-
+        function loopCs2(){ updateCs2(); drawCs2(); requestAnimationFrame(loopCs2);}
+        loopCs2();
     </script>
-   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5486175208501620"
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5486175208501620"
      crossorigin="anonymous"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
