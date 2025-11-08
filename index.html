@@ -1,31 +1,283 @@
-<!-- Ekran logowania -->
-<div id="login-screen">
-    <h2>Zaloguj się</h2>
-    <input type="text" id="username" placeholder="Nazwa użytkownika">
-    <input type="password" id="password" placeholder="Hasło">
-    <button onclick="checkLogin()">Wejdź</button>
-    <p id="error"></p>
-</div>
-
-<script>
-    // Obiekty kont: nazwa_użytkownika : hasło
-    const accounts = {
-        "wazon": "wazon213767",
-        "julus": "julus696967",
-        "admin": "adminabuse"
-    };
-
-    function checkLogin() {
-        const user = document.getElementById("username").value.trim().toLowerCase();
-        const pass = document.getElementById("password").value;
-
-        if (accounts[user] && accounts[user] === pass) {
-            document.getElementById("login-screen").style.display = "none";
-            document.getElementById("content").style.display = "block";
-            document.getElementById("error").textContent = "";
-        } else {
-            document.getElementById("error").textContent = "Niepoprawna nazwa użytkownika lub hasło!";
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta name="google-adsense-account" content="ca-pub-5486175208501620">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasze Klipy + CS2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
         }
-    }
-</script>
+        h1 { margin-bottom: 40px; }
+        .video-container { margin-bottom: 40px; }
+        iframe { width: 80%; max-width: 560px; height: 315px; }
 
+        /* Styl do ekranu logowania */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #111; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;
+        }
+        #login-screen input { padding: 10px; font-size: 16px; margin-top: 10px; border: none; border-radius: 5px; }
+        #login-screen button { padding: 10px 20px; margin-top: 10px; background-color: #444; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #error { color: red; margin-top: 10px; }
+
+        /* Menu */
+        nav { margin-bottom: 30px; }
+        nav button { background-color: #333; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        nav button:hover { background-color: #555; }
+
+        /* Gry */
+        #gameCanvas, #cs2Canvas { background-color: #222; display: block; margin: 0 auto; border: 2px solid white; }
+        .controls { margin-top: 10px; }
+        .hud { color: #fff; font-family: monospace; }
+        .panel { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <!-- Ekran logowania -->
+    <div id="login-screen">
+        <h2>Zaloguj się</h2>
+        <input type="text" id="username" placeholder="Nazwa użytkownika">
+        <input type="password" id="password" placeholder="Hasło">
+        <button onclick="checkLogin()">Wejdź</button>
+        <p id="error"></p>
+    </div>
+
+    <!-- Zawartość strony -->
+    <div id="content" style="display:none;">
+        <nav>
+            <button onclick="showSection('clips')">🎥 Klipy cebulka</button>
+            <button onclick="showSection('game')">🎮 geometryjny dach</button>
+            <button onclick="showSection('cs2')">🔫 CS2</button>
+        </nav>
+
+        <!-- Sekcja z klipami -->
+        <div id="clips">
+            <h1>Klipy cebulka300</h1>
+
+            <div class="video-container">
+                <h2>Znany "kutavon"</h2>
+                <iframe src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <p>Autor <b>Julus</b></p>
+
+            <div class="video-container">
+                <h2>Filmik 2</h2>
+                <iframe src="https://www.youtube.com/embed/6d7HCDqedlg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+
+            <div class="video-container">
+                <h2>Filmik 3</h2>
+                <iframe src="https://www.youtube.com/embed/abcdefghijk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- Sekcja z Geometry Dash -->
+        <div id="game" style="display:none;">
+            <h1>Geometry Dash 🟦 — Level 1</h1>
+            <canvas id="gameCanvas" width="400" height="500"></canvas>
+            <p>Kliknij lub naciśnij spację, żeby podskoczyć!</p>
+        </div>
+
+        <!-- Sekcja CS2 -->
+        <div id="cs2" style="display:none;">
+            <h1>CS2 — tryb treningowy (2D)</h1>
+            <div class="panel">
+                <button id="startCs2">Start</button>
+                <button id="restartCs2">Restart</button>
+                <span class="hud"> Zdrowie: <span id="playerHealth">100</span> | Punkty: <span id="cs2Score">0</span></span>
+            </div>
+            <canvas id="cs2Canvas" width="900" height="500"></canvas>
+            <div class="controls">
+                Sterowanie: WASD — ruch, mysz — celowanie, lewy klik — strzał, P — pauza.
+            </div>
+            <p style="font-size:12px; opacity:0.8;">Jedyna gra w ktorej cebulka moze zrobic wiecej killi niz 1</p>
+        </div>
+    </div>
+
+    <script>
+        // --------------------
+        // Logowanie z kontami
+        // --------------------
+        const accounts = {
+            "wazon": "wazon213767",
+            "julus": "julus696967",
+            "admin": "adminabuse"
+        };
+
+        function checkLogin() {
+            const user = document.getElementById("username").value.trim().toLowerCase();
+            const pass = document.getElementById("password").value;
+
+            if (accounts[user] && accounts[user] === pass) {
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("content").style.display = "block";
+                document.getElementById("error").textContent = "";
+            } else {
+                document.getElementById("error").textContent = "Niepoprawna nazwa użytkownika lub hasło!";
+            }
+        }
+
+        // --------------------
+        // Menu i sekcje
+        // --------------------
+        function showSection(section) {
+            document.getElementById('clips').style.display = 'none';
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('cs2').style.display = 'none';
+            document.getElementById(section).style.display = 'block';
+        }
+
+        // --------------------
+        // Geometry Dash
+        // --------------------
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const G = { width: canvas.width, height: canvas.height, groundY: 420 };
+        const player = { x: 80, y: G.groundY - 40, size: 34, vy: 0, gravity: 0.9, jumpPower: -15, onGround: true, color: '#00bfff' };
+        let scrollSpeed = 4, gameStarted = false, gameOver = false, distance = 0;
+        const obstacles = [];
+        const levelPattern = [
+            ['box', 250], ['spike', 160], ['spike', 60], ['gap', 200], ['box', 260],
+            ['box', 140], ['spike', 120], ['gap', 220], ['box', 260], ['spike', 120],
+            ['box', 140], ['gap', 180], ['spike', 130], ['box', 200], ['box', 140],
+            ['spike', 80], ['gap', 260], ['box', 280], ['spike', 120], ['box', 140],
+            ['gap', 320]
+        ];
+
+        function buildLevel() {
+            obstacles.length = 0;
+            let x = G.width + 80;
+            for (const item of levelPattern) {
+                const type = item[0], offset = item[1];
+                x += offset;
+                if (type === 'spike') obstacles.push({ type: 'spike', x: x, w: 40, h: 26 }), x+=40;
+                else if (type === 'box') obstacles.push({ type: 'box', x: x, w: 40, h: 40 }), x+=40;
+                else if (type === 'gap') obstacles.push({ type: 'gap', x: x, w: item[1], h: 0 }), x+=item[1];
+            }
+            obstacles.push({ type: 'flag', x: x + 200, w: 20, h: 80 });
+        }
+        buildLevel();
+
+        function resetGD() {
+            player.y = G.groundY - player.size;
+            player.vy = 0; player.onGround = true;
+            gameStarted = false; gameOver = false; distance = 0; scrollSpeed = 4;
+            buildLevel();
+        }
+
+        function doJump() {
+            if (gameOver) { resetGD(); return; }
+            if (!gameStarted) gameStarted = true;
+            if (player.onGround) { player.vy = player.jumpPower; player.onGround = false; }
+        }
+        document.addEventListener('keydown', e => { if(e.code==='Space'){ e.preventDefault(); doJump(); }});
+        canvas.addEventListener('mousedown', doJump);
+
+        function rectsIntersect(rx, ry, rw, rh, px, py, pw, ph) {
+            return !(px + pw < rx || px > rx + rw || py + ph < ry || py > ry + rh);
+        }
+
+        function updateGD() {
+            if(!gameStarted || gameOver) return;
+            player.vy += player.gravity;
+            player.y += player.vy;
+            if(player.y + player.size >= G.groundY) { player.y = G.groundY - player.size; player.vy=0; player.onGround=true; } else player.onGround=false;
+            for(let i=obstacles.length-1;i>=0;i--){ const obj=obstacles[i]; obj.x-=scrollSpeed; if(obj.x+(obj.w||0)<-200) obstacles.splice(i,1);}
+            distance += scrollSpeed*0.1;
+
+            for(const obj of obstacles){ 
+                if(obj.type==='flag' && obj.x<player.x+40){ gameOver=true; gameStarted=false; scrollSpeed=0;}
+                else if(obj.type==='box' && rectsIntersect(obj.x, G.groundY-obj.h, obj.w, obj.h, player.x, player.y, player.size, player.size)) gameOver=true;
+                else if(obj.type==='spike' && rectsIntersect(obj.x, G.groundY-obj.h, obj.w, obj.h, player.x, player.y, player.size, player.size)) gameOver=true;
+                else if(obj.type==='gap' && player.x+player.size>obj.x && player.x<obj.x+obj.w && player.onGround){ player.y+=2; player.onGround=false; }
+            }
+            if(player.y>G.height+50 || player.y<-200) gameOver=true;
+            if(distance>4000 && scrollSpeed<6) scrollSpeed=5;
+            if(distance>8000 && scrollSpeed<7) scrollSpeed=6;
+        }
+
+        function drawGD() {
+            ctx.fillStyle='#000'; ctx.fillRect(0,0,G.width,G.height);
+            ctx.fillStyle='#111'; ctx.fillRect(0,G.groundY,G.width,G.height-G.groundY);
+            ctx.fillStyle='#1a1a1a';
+            for(let i=0;i<8;i++) ctx.fillRect((i*100)-((distance*0.2)%100), G.groundY-6-(i%2)*3, 80, 2);
+            for(const obj of obstacles){
+                if(obj.type==='box'){ ctx.fillStyle='#8b4513'; ctx.fillRect(Math.round(obj.x), G.groundY-obj.h, obj.w, obj.h); ctx.strokeStyle='#5a2f0f'; ctx.strokeRect(Math.round(obj.x), G.groundY-obj.h, obj.w, obj.h); }
+                else if(obj.type==='spike'){ const sx=Math.round(obj.x),sy=G.groundY-obj.h,tw=obj.w/3; ctx.fillStyle='#ff3333'; for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(sx+i*tw, sy+obj.h); ctx.lineTo(sx+i*tw+tw/2, sy); ctx.lineTo(sx+i*tw+tw, sy+obj.h); ctx.closePath(); ctx.fill(); } }
+                else if(obj.type==='gap'){ ctx.fillStyle='#111'; ctx.fillRect(Math.round(obj.x)-2,G.groundY-4,4,4); ctx.fillRect(Math.round(obj.x+obj.w)-2,G.groundY-4,4,4);}
+                else if(obj.type==='flag'){ const fx=Math.round(obj.x),fy=G.groundY-obj.h; ctx.fillStyle='#ffcc00'; ctx.fillRect(fx,fy,6,obj.h); ctx.fillStyle='#ff3333'; ctx.beginPath(); ctx.moveTo(fx+6,fy); ctx.lineTo(fx+30,fy+14); ctx.lineTo(fx+6,fy+28); ctx.closePath(); ctx.fill(); }
+            }
+            ctx.fillStyle=player.color; ctx.fillRect(Math.round(player.x), Math.round(player.y), player.size, player.size); ctx.fillStyle='rgba(0,0,0,0.15)'; ctx.fillRect(Math.round(player.x), Math.round(player.y)+player.size-6, player.size, 6);
+            ctx.fillStyle='white'; ctx.font='18px monospace'; ctx.fillText('Dystans: '+Math.floor(distance)+'m',12,30);
+            if(!gameStarted && !gameOver){ ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,G.width,G.height); ctx.fillStyle='white'; ctx.font='22px Arial'; ctx.fillText('Kliknij / Spacja żeby START', G.width/2 - 140, G.height/2); }
+            if(gameOver){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,G.width,G.height); ctx.fillStyle='white'; ctx.font='26px Arial'; ctx.fillText('KONIEC LEVELU', G.width/2-100,G.height/2-10); ctx.font='18px Arial'; ctx.fillText('Kliknij, żeby zresetować', G.width/2-100,G.height/2+20);}
+        }
+
+        function loopGD(){ updateGD(); drawGD(); requestAnimationFrame(loopGD); }
+        loopGD();
+
+        // ---------------------------
+        // CS2
+        // ---------------------------
+        const cs2Canvas = document.getElementById('cs2Canvas');
+        const g = cs2Canvas.getContext('2d');
+        const W = cs2Canvas.width, H = cs2Canvas.height;
+        let playerCS = { x: W/2, y: H/2, r: 12, dir: 0, speed: 2.5, hp: 100 };
+        let bullets = [], enemies = [], keys = {}, mouse = { x:0, y:0, down:false };
+        let cs2Running=false, cs2Score=0, cs2Paused=false;
+
+        function spawnEnemy(){ const edge=Math.floor(Math.random()*4); let x,y; if(edge===0){x=-20;y=Math.random()*H;} if(edge===1){x=W+20;y=Math.random()*H;} if(edge===2){x=Math.random()*W;y=-20;} if(edge===3){x=Math.random()*W;y=H+20;} enemies.push({x,y,r:12,speed:1+Math.random()*1.2,hp:20});}
+
+        function startCs2(){ playerCS={x:W/2,y:H/2,r:12,dir:0,speed:2.5,hp:100}; bullets=[]; enemies=[]; cs2Score=0; cs2Running=true; cs2Paused=false; for(let i=0;i<4;i++) spawnEnemy(); }
+        function restartCs2(){ startCs2(); }
+
+        document.getElementById('startCs2').addEventListener('click', startCs2);
+        document.getElementById('restartCs2').addEventListener('click', restartCs2);
+
+        cs2Canvas.addEventListener('mousemove', e=>{ const rect=cs2Canvas.getBoundingClientRect(); mouse.x=e.clientX-rect.left; mouse.y=e.clientY-rect.top; playerCS.dir=Math.atan2(mouse.y-playerCS.y, mouse.x-playerCS.x); });
+        cs2Canvas.addEventListener('mousedown', e=>{ mouse.down=true; shoot(); });
+        window.addEventListener('mouseup', e=>{ mouse.down=false; });
+        window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()]=true; if(e.key.toLowerCase()==='p') cs2Paused=!cs2Paused; });
+        window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+
+        function shoot(){ if(!cs2Running||cs2Paused) return; bullets.push({x:playerCS.x+Math.cos(playerCS.dir)*(playerCS.r+6),y:playerCS.y+Math.sin(playerCS.dir)*(playerCS.r+6),dx:Math.cos(playerCS.dir)*8,dy:Math.sin(playerCS.dir)*8,life:60}); }
+
+        function updateCs2(){
+            if(!cs2Running||cs2Paused) return;
+            let mvx=0,mvy=0;
+            if(keys['w']) mvy-=1; if(keys['s']) mvy+=1; if(keys['a']) mvx-=1; if(keys['d']) mvx+=1;
+            const norm=Math.sqrt(mvx*mvx+mvy*mvy); if(norm>0){ mvx/=norm; mvy/=norm; }
+            playerCS.x+=mvx*playerCS.speed; playerCS.y+=mvy*playerCS.speed;
+            playerCS.x=Math.max(0,Math.min(W,playerCS.x));
+            playerCS.y=Math.max(0,Math.min(H,playerCS.y));
+
+            bullets.forEach(b=>{ b.x+=b.dx; b.y+=b.dy; b.life--; });
+            bullets=bullets.filter(b=>b.life>0);
+
+            enemies.forEach(e=>{ const dx=playerCS.x-e.x,dy=playerCS.y-e.y; const dist=Math.sqrt(dx*dx+dy*dy); e.x+=dx/dist*e.speed; e.y+=dy/dist*e.speed; });
+            enemies.forEach((e,i)=>{ bullets.forEach(b=>{ const dx=b.x-e.x,dy=b.y-e.y; const d=Math.sqrt(dx*dx+dy*dy); if(d<e.r){e.hp-=10;b.life=0; if(e.hp<=0){ enemies.splice(i,1); cs2Score+=1; spawnEnemy(); } } }); });
+            enemies.forEach(e=>{ const dx=e.x-playerCS.x,dy=e.y-playerCS.y; const d=Math.sqrt(dx*dx+dy*dy); if(d<e.r+playerCS.r){ playerCS.hp-=0.5; } });
+            if(playerCS.hp<=0) cs2Running=false;
+            document.getElementById('playerHealth').textContent=Math.max(0,Math.floor(playerCS.hp));
+            document.getElementById('cs2Score').textContent=cs2Score;
+        }
+
+        function drawCs2(){
+            g.fillStyle='#111'; g.fillRect(0,0,W,H);
+            bullets.forEach(b=>{ g.fillStyle='yellow'; g.beginPath(); g.arc(b.x,b.y,4,0,Math.PI*2); g.fill(); });
+            enemies.forEach(e=>{ g.fillStyle='red'; g.beginPath(); g.arc(e.x,e.y,e.r,0,Math.PI*2); g.fill(); });
+            g.fillStyle='cyan'; g.beginPath(); g.arc(playerCS.x,playerCS.y,playerCS.r,0,Math.PI*2); g.fill();
+            if(!cs2Running){ g.fillStyle='rgba(0,0,0,0.7)'; g.fillRect(0,0,W,H); g.fillStyle='white'; g.font='24px Arial'; g.fillText('GAME OVER', W/2-70,H/2-10); g.font='16px Arial'; g.fillText('Kliknij START', W/2-50,H/2+20); } 
+        }
+
+        function loopCs2(){ updateCs2(); drawCs2(); requestAnimationFrame(loopCs2); }
+        loopCs2();
+    </script>
+</body>
+</html>
