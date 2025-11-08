@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nasze Klipy</title>
+    <title>Nasze Klipy + CS2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,80 +12,29 @@
             text-align: center;
             padding: 20px;
         }
-        h1 {
-            margin-bottom: 40px;
-        }
-        .video-container {
-            margin-bottom: 40px;
-        }
-        iframe {
-            width: 80%;
-            max-width: 560px;
-            height: 315px;
-        }
+        h1 { margin-bottom: 40px; }
+        .video-container { margin-bottom: 40px; }
+        iframe { width: 80%; max-width: 560px; height: 315px; }
 
         /* Styl do ekranu logowania */
         #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 9999;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #111; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;
         }
-
-        #login-screen input {
-            padding: 10px;
-            font-size: 16px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 5px;
-        }
-
-        #login-screen button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #444;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #error {
-            color: red;
-            margin-top: 10px;
-        }
+        #login-screen input { padding: 10px; font-size: 16px; margin-top: 10px; border: none; border-radius: 5px; }
+        #login-screen button { padding: 10px 20px; margin-top: 10px; background-color: #444; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #error { color: red; margin-top: 10px; }
 
         /* Menu */
-        nav {
-            margin-bottom: 30px;
-        }
-        nav button {
-            background-color: #333;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        nav button:hover {
-            background-color: #555;
-        }
+        nav { margin-bottom: 30px; }
+        nav button { background-color: #333; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        nav button:hover { background-color: #555; }
 
-        /* Styl gry */
-        #gameCanvas {
-            background-color: #222;
-            display: block;
-            margin: 0 auto;
-            border: 2px solid white;
-        }
+        /* Gry */
+        #gameCanvas, #cs2Canvas { background-color: #222; display: block; margin: 0 auto; border: 2px solid white; }
+        .controls { margin-top: 10px; }
+        .hud { color: #fff; font-family: monospace; }
+        .panel { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -101,7 +50,8 @@
     <div id="content" style="display:none;">
         <nav>
             <button onclick="showSection('clips')">🎥 Klipy cebulka</button>
-            <button onclick="showSection('game')">🎮 Gra dla cebulki</button>
+            <button onclick="showSection('game')">🎮 Fluffy Bird</button>
+            <button onclick="showSection('cs2')">🔫 CS2</button>
         </nav>
 
         <!-- Sekcja z klipami -->
@@ -110,37 +60,41 @@
 
             <div class="video-container">
                 <h2>Znany "kutavon"</h2>
-                <iframe width="995" height="746" src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
             <p>Autor <b>Julus</b></p>
-            
 
             <div class="video-container">
                 <h2>Filmik 2</h2>
-                <iframe src="https://www.youtube.com/embed/6d7HCDqedlg" 
-                        title="YouTube video player" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        allowfullscreen>
-                </iframe>
+                <iframe src="https://www.youtube.com/embed/6d7HCDqedlg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
 
             <div class="video-container">
                 <h2>Filmik 3</h2>
-                <iframe src="https://www.youtube.com/embed/abcdefghijk" 
-                        title="YouTube video player" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        allowfullscreen>
-                </iframe>
+                <iframe src="https://www.youtube.com/embed/abcdefghijk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
         </div>
 
-        <!-- Sekcja z grą -->
+        <!-- Sekcja z Fluffy Bird -->
         <div id="game" style="display:none;">
             <h1>Fluffy Bird 🐤</h1>
             <canvas id="gameCanvas" width="400" height="500"></canvas>
             <p>Kliknij lub naciśnij spację, żeby podskoczyć!</p>
+        </div>
+
+        <!-- Sekcja CS2 (prosty top-down shooter inspirowany CS) -->
+        <div id="cs2" style="display:none;">
+            <h1>CS2 — tryb treningowy (2D)</h1>
+            <div class="panel">
+                <button id="startCs2">Start</button>
+                <button id="restartCs2">Restart</button>
+                <span class="hud"> Zdrowie: <span id="playerHealth">100</span> | Punkty: <span id="cs2Score">0</span></span>
+            </div>
+            <canvas id="cs2Canvas" width="900" height="500"></canvas>
+            <div class="controls">
+                Sterowanie: WASD — ruch, mysz — celowanie, lewy klik — strzał, P — pauza.
+            </div>
+            <p style="font-size:12px; opacity:0.8;">Gra jest prostą, edukacyjną wersją 2D — nie to nie jest prawdziwy CS2 tylko zabawa na przeglądarce.</p>
         </div>
     </div>
 
@@ -158,6 +112,7 @@
         function showSection(section) {
             document.getElementById('clips').style.display = 'none';
             document.getElementById('game').style.display = 'none';
+            document.getElementById('cs2').style.display = 'none';
             document.getElementById(section).style.display = 'block';
         }
 
@@ -170,10 +125,7 @@
         let score = 0;
 
         function resetGame() {
-            birdY = 250;
-            birdV = 0;
-            pipes = [];
-            score = 0;
+            birdY = 250; birdV = 0; pipes = []; score = 0;
         }
 
         function createPipe() {
@@ -183,62 +135,168 @@
         }
 
         function updateGame() {
-            birdV += gravity;
-            birdY += birdV;
-
+            birdV += gravity; birdY += birdV;
             if (birdY > 480 || birdY < 0) resetGame();
-
             if (Math.random() < 0.02) createPipe();
-
-            for (let pipe of pipes) {
+            for (let i = pipes.length-1; i >=0; i--) {
+                let pipe = pipes[i];
                 pipe.x -= 3;
-
-                if (pipe.x + 50 < 0) pipes.shift();
-
+                if (pipe.x + 50 < 0) pipes.splice(i,1);
                 if (pipe.x < 60 && pipe.x + 50 > 20) {
                     if (birdY < pipe.top || birdY > pipe.bottom) resetGame();
                 }
-
                 if (pipe.x === 47) score++;
             }
         }
 
         function drawGame() {
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, 400, 500);
-
-            // Bird
-            ctx.fillStyle = "yellow";
-            ctx.beginPath();
-            ctx.arc(50, birdY, 10, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Pipes
+            ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 400, 500);
+            ctx.fillStyle = "yellow"; ctx.beginPath(); ctx.arc(50, birdY, 10, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = "lime";
-            for (let pipe of pipes) {
-                ctx.fillRect(pipe.x, 0, 50, pipe.top);
-                ctx.fillRect(pipe.x, pipe.bottom, 50, 500 - pipe.bottom);
+            for (let pipe of pipes) { ctx.fillRect(pipe.x, 0, 50, pipe.top); ctx.fillRect(pipe.x, pipe.bottom, 50, 500 - pipe.bottom); }
+            ctx.fillStyle = "white"; ctx.font = "20px Arial"; ctx.fillText("Punkty: " + score, 10, 25);
+        }
+
+        function loop() { updateGame(); drawGame(); requestAnimationFrame(loop); }
+        document.addEventListener("keydown", e => { if (e.code === "Space") birdV = jump; });
+        canvas.addEventListener("mousedown", () => birdV = jump);
+        loop();
+
+        // --- CS2-like (2D top-down shooter) ---
+        const cs2Canvas = document.getElementById('cs2Canvas');
+        const g = cs2Canvas.getContext('2d');
+        const W = cs2Canvas.width, H = cs2Canvas.height;
+
+        let player = { x: W/2, y: H/2, r: 12, dir: 0, speed: 2.5, hp: 100 };
+        let bullets = [];
+        let enemies = [];
+        let keys = {};
+        let mouse = { x: 0, y: 0, down: false };
+        let cs2Running = false;
+        let cs2Score = 0;
+        let cs2Paused = false;
+
+        function spawnEnemy() {
+            // spawn at random edge
+            const edge = Math.floor(Math.random()*4);
+            let x, y;
+            if (edge===0){ x = -20; y = Math.random()*H }
+            if (edge===1){ x = W+20; y = Math.random()*H }
+            if (edge===2){ x = Math.random()*W; y = -20 }
+            if (edge===3){ x = Math.random()*W; y = H+20 }
+            enemies.push({ x, y, r: 12, speed: 1 + Math.random()*1.2, hp: 20 });
+        }
+
+        function startCs2(){
+            player.x = W/2; player.y = H/2; player.hp = 100; bullets = []; enemies = []; cs2Score = 0; cs2Running = true; cs2Paused = false;
+            // initial enemies
+            for(let i=0;i<4;i++) spawnEnemy();
+        }
+
+        function restartCs2(){ startCs2(); }
+
+        document.getElementById('startCs2').addEventListener('click', startCs2);
+        document.getElementById('restartCs2').addEventListener('click', restartCs2);
+
+        cs2Canvas.addEventListener('mousemove', e => {
+            const rect = cs2Canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left; mouse.y = e.clientY - rect.top;
+            player.dir = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+        });
+        cs2Canvas.addEventListener('mousedown', e => { mouse.down = true; shoot(); });
+        window.addEventListener('mouseup', e => { mouse.down = false; });
+
+        window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if(e.key.toLowerCase()==='p') cs2Paused = !cs2Paused; });
+        window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+        function shoot(){ if(!cs2Running || cs2Paused) return; bullets.push({ x: player.x + Math.cos(player.dir)* (player.r+6), y: player.y + Math.sin(player.dir)*(player.r+6), dx: Math.cos(player.dir)*8, dy: Math.sin(player.dir)*8, life: 60 }); }
+
+        function updateCs2(){
+            if(!cs2Running || cs2Paused) return;
+            // movement
+            let mvx=0,mvy=0;
+            if(keys['w']) mvy -= 1; if(keys['s']) mvy +=1; if(keys['a']) mvx -=1; if(keys['d']) mvx +=1;
+            const len = Math.hypot(mvx,mvy) || 1; player.x += (mvx/len)*player.speed; player.y += (mvy/len)*player.speed;
+            // bounds
+            player.x = Math.max(player.r, Math.min(W-player.r, player.x));
+            player.y = Math.max(player.r, Math.min(H-player.r, player.y));
+
+            // bullets
+            for(let i=bullets.length-1;i>=0;i--){
+                let b = bullets[i]; b.x += b.dx; b.y += b.dy; b.life--; if(b.life<=0) bullets.splice(i,1);
             }
 
-            // Score
-            ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.fillText("Punkty: " + score, 10, 25);
+            // enemies move towards player
+            for(let i=enemies.length-1;i>=0;i--){
+                let e = enemies[i];
+                const ang = Math.atan2(player.y - e.y, player.x - e.x);
+                e.x += Math.cos(ang)*e.speed; e.y += Math.sin(ang)*e.speed;
+                // collision with player
+                const dist = Math.hypot(e.x - player.x, e.y - player.y);
+                if(dist < e.r + player.r){ player.hp -= 10; enemies.splice(i,1); }
+            }
+
+            // bullet hits
+            for(let i=enemies.length-1;i>=0;i--){
+                for(let j=bullets.length-1;j>=0;j--){
+                    const e = enemies[i], b = bullets[j];
+                    if(Math.hypot(e.x - b.x, e.y - b.y) < e.r + 3){
+                        e.hp -= 20; bullets.splice(j,1);
+                        if(e.hp<=0){ enemies.splice(i,1); cs2Score += 100; }
+                        break;
+                    }
+                }
+            }
+
+            // spawn more enemies over time
+            if(Math.random() < 0.02) spawnEnemy();
+
+            if(player.hp <= 0){ cs2Running = false; }
+
+            // update HUD
+            document.getElementById('playerHealth').textContent = Math.max(0, Math.floor(player.hp));
+            document.getElementById('cs2Score').textContent = cs2Score;
         }
 
-        function loop() {
-            updateGame();
-            drawGame();
-            requestAnimationFrame(loop);
+        function drawCs2(){
+            // background
+            g.fillStyle = '#111'; g.fillRect(0,0,W,H);
+
+            // simple map obstacles (for flavor)
+            g.fillStyle = '#2b2b2b';
+            g.fillRect(150,80,120,20); g.fillRect(560,300,20,120); g.fillRect(360,200,150,30);
+
+            // player
+            g.save();
+            g.translate(player.x, player.y);
+            g.rotate(player.dir);
+            g.fillStyle = 'dodgerblue';
+            g.beginPath(); g.arc(0,0,player.r,0,Math.PI*2); g.fill();
+            // gun
+            g.fillStyle = '#ccc'; g.fillRect(0, -4, player.r+14, 8);
+            g.restore();
+
+            // bullets
+            g.fillStyle = '#ffd';
+            for(const b of bullets){ g.beginPath(); g.arc(b.x,b.y,3,0,Math.PI*2); g.fill(); }
+
+            // enemies
+            g.fillStyle = 'tomato';
+            for(const e of enemies){ g.beginPath(); g.arc(e.x,e.y,e.r,0,Math.PI*2); g.fill(); }
+
+            // HUD
+            g.fillStyle = 'white'; g.font = '16px monospace'; g.fillText('HP: ' + Math.max(0, Math.floor(player.hp)), 10, 20);
+            g.fillText('Punkty: ' + cs2Score, 10, 40);
+
+            if(!cs2Running){ g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(0,0,W,H); g.fillStyle='white'; g.font='26px Arial'; g.fillText('GRA ZATRZYMANA - Kliknij Start', W/2-160, H/2); }
+            if(cs2Paused){ g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0,0,W,H); g.fillStyle='white'; g.font='26px Arial'; g.fillText('PAUZA (P)', W/2-60, H/2); }
         }
 
-        document.addEventListener("keydown", e => {
-            if (e.code === "Space") birdV = jump;
-        });
+        function cs2Loop(){ updateCs2(); drawCs2(); requestAnimationFrame(cs2Loop); }
+        cs2Loop();
 
-        canvas.addEventListener("mousedown", () => birdV = jump);
-
-        loop();
+        // prosty autoshoot jeśli mysz trzymana
+        setInterval(()=>{ if(mouse.down && cs2Running && !cs2Paused) shoot(); }, 150);
     </script>
 </body>
 </html>
