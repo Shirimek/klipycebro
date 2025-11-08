@@ -86,6 +86,20 @@
             margin: 0 auto;
             border: 2px solid white;
         }
+
+        #startBtn {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #startBtn:hover {
+            background-color: #666;
+        }
     </style>
 </head>
 <body>
@@ -114,7 +128,6 @@
             </div>
             <p>Autor <b>Julus</b></p>
             
-
             <div class="video-container">
                 <h2>Filmik 2</h2>
                 <iframe src="https://www.youtube.com/embed/6d7HCDqedlg" 
@@ -139,7 +152,8 @@
         <!-- Sekcja z grą -->
         <div id="game" style="display:none;">
             <h1>Fluffy Bird 🐤</h1>
-            <canvas id="gameCanvas" width="400" height="500"></canvas>
+            <canvas id="gameCanvas" width="400" height="500"></canvas><br>
+            <button id="startBtn" onclick="startGame()">Start</button>
             <p>Kliknij lub naciśnij spację, żeby podskoczyć!</p>
         </div>
     </div>
@@ -147,7 +161,7 @@
     <script>
         function checkPassword() {
             const pass = document.getElementById("password").value;
-            if (pass === "cebulaczosnek67") {
+            if (pass === "tajnehaslo6967") {
                 document.getElementById("login-screen").style.display = "none";
                 document.getElementById("content").style.display = "block";
             } else {
@@ -161,46 +175,73 @@
             document.getElementById(section).style.display = 'block';
         }
 
-        // --- Flappy Bird ---
+        // --- Fluffy Bird ---
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let birdY = 250, birdV = 0, gravity = 0.5, jump = -8;
-        let pipes = [];
-        let score = 0;
+        let birdY, birdV, gravity, jump;
+        let pipes, score, gameRunning, pipeTimer;
 
         function resetGame() {
             birdY = 250;
             birdV = 0;
+            gravity = 0.4;
+            jump = -7;
             pipes = [];
             score = 0;
+            gameRunning = false;
+            clearTimeout(pipeTimer);
+            drawGame();
+        }
+
+        function startGame() {
+            resetGame();
+            gameRunning = true;
+            createPipe();
+            loop();
         }
 
         function createPipe() {
             const gap = 130;
-            const topHeight = Math.random() * 250 + 50;
-            pipes.push({ x: 400, top: topHeight, bottom: topHeight + gap });
+            const topHeight = Math.random() * 200 + 50;
+            const bottomY = topHeight + gap;
+            pipes.push({ x: 400, top: topHeight, bottom: bottomY });
+            pipeTimer = setTimeout(createPipe, 1800);
         }
 
         function updateGame() {
+            if (!gameRunning) return;
             birdV += gravity;
             birdY += birdV;
 
-            if (birdY > 480 || birdY < 0) resetGame();
-
-            if (Math.random() < 0.02) createPipe();
+            if (birdY > 490 || birdY < 0) gameOver();
 
             for (let pipe of pipes) {
                 pipe.x -= 3;
+            }
 
-                if (pipe.x + 50 < 0) pipes.shift();
+            // usuń niewidoczne rury
+            pipes = pipes.filter(pipe => pipe.x + 50 > 0);
 
+            // kolizje
+            for (let pipe of pipes) {
                 if (pipe.x < 60 && pipe.x + 50 > 20) {
-                    if (birdY < pipe.top || birdY > pipe.bottom) resetGame();
+                    if (birdY < pipe.top || birdY > pipe.bottom) {
+                        gameOver();
+                    }
                 }
 
+                // dodawanie punktów
                 if (pipe.x === 47) score++;
             }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            clearTimeout(pipeTimer);
+            ctx.fillStyle = "red";
+            ctx.font = "24px Arial";
+            ctx.fillText("Koniec gry! Kliknij Start, by zagrać ponownie", 15, 250);
         }
 
         function drawGame() {
@@ -227,19 +268,20 @@
         }
 
         function loop() {
-            updateGame();
+            if (gameRunning) updateGame();
             drawGame();
             requestAnimationFrame(loop);
         }
 
         document.addEventListener("keydown", e => {
-            if (e.code === "Space") birdV = jump;
+            if (e.code === "Space" && gameRunning) birdV = jump;
         });
 
-        canvas.addEventListener("mousedown", () => birdV = jump);
+        canvas.addEventListener("mousedown", () => {
+            if (gameRunning) birdV = jump;
+        });
 
-        loop();
+        resetGame();
     </script>
 </body>
 </html>
-
