@@ -23,41 +23,97 @@
             max-width: 560px;
             height: 315px;
         }
+
+        /* Styl do ekranu logowania */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+
+        #login-screen input {
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #login-screen button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Klipy cebulka300</h1>
-
-    <div class="video-container">
-        <h2>Znany "kutavon"</h2>
-       <iframe width="995" height="746" src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        </iframe>
+    <!-- Ekran logowania -->
+    <div id="login-screen">
+        <h2>Wpisz hasło, żeby wejść</h2>
+        <input type="password" id="password" placeholder="Hasło">
+        <button onclick="checkPassword()">Wejdź</button>
+        <p id="error"></p>
     </div>
 
-    <div class="video-container">
-        <h2>Filmik 2</h2>
-        <iframe src="https://www.youtube.com/watch?v=6d7HCDqedlg" 
-                title="YouTube video player" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen>
-        </iframe>
+    <!-- Zawartość strony -->
+    <div id="content" style="display:none;">
+        <h1>Klipy cebulka300</h1>
+
+        <div class="video-container">
+            <h2>Znany "kutavon"</h2>
+            <iframe width="995" height="746" src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+
+        <div class="video-container">
+            <h2>Filmik 2</h2>
+            <iframe src="https://www.youtube.com/watch?v=6d7HCDqedlg" 
+                    title="YouTube video player" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+            </iframe>
+        </div>
+
+        <div class="video-container">
+            <h2>Filmik 3</h2>
+            <iframe src="https://www.youtube.com/embed/abcdefghijk" 
+                    title="YouTube video player" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+            </iframe>
+        </div>
+
+        <iframe width="995" height="746" src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </div>
 
-    <div class="video-container">
-        <h2>Filmik 3</h2>
-        <iframe src="https://www.youtube.com/embed/abcdefghijk" 
-                title="YouTube video player" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen>
-        </iframe>
-    </div>
-
-<iframe width="995" height="746" src="https://www.youtube.com/embed/6d7HCDqedlg" title="Kutavon 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    
+    <script>
+        function checkPassword() {
+            const pass = document.getElementById("password").value;
+            if (pass === "tajnehaslo2137") {
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("content").style.display = "block";
+            } else {
+                document.getElementById("error").textContent = "Złe hasło!";
+            }
+        }
+    </script>
 </body>
 </html>
-
-
-
