@@ -36,6 +36,11 @@
         .controls { margin-top: 10px; }
         .hud { color: #fff; font-family: monospace; }
         .panel { margin-bottom: 10px; }
+
+        /* CS2 3D container style */
+        #cs2SceneContainer { width: 900px; height: 500px; margin: 0 auto; border: 2px solid white; background:#000; position:relative; }
+        #cs2Overlay { position:absolute; left:10px; top:10px; color:#fff; z-index:10; font-family:monospace; }
+        #start3DBtn, #restart3DBtn { margin-right: 8px; }
     </style>
 </head>
 <body>
@@ -86,17 +91,20 @@
             <p>Kliknij lub naciśnij spację, żeby podskoczyć!</p>
         </div>
 
-        <!-- Sekcja CS2 -->
+        <!-- Sekcja CS2 (tu podmieniono 2D na 3D) -->
         <div id="cs2" style="display:none;">
-            <h1>CS2 — tryb treningowy (2D)</h1>
+            <h1>CS2 — tryb treningowy (3D)</h1>
             <div class="panel">
-                <button id="startCs2">Start</button>
-                <button id="restartCs2">Restart</button>
+                <button id="startCs2" onclick="start3DGame()">Start Gry 3D</button>
+                <button id="restartCs2" onclick="location.reload()">Restart</button>
                 <span class="hud"> Zdrowie: <span id="playerHealth">100</span> | Punkty: <span id="cs2Score">0</span></span>
             </div>
-            <canvas id="cs2Canvas" width="900" height="500"></canvas>
+            <!-- tutaj renderer Three.js zostanie wstawiony -->
+            <div id="cs2SceneContainer">
+                <div id="cs2Overlay">Kliknij 'Start Gry 3D' aby uruchomić. Po uruchomieniu kliknij na ekran, aby zablokować mysz.</div>
+            </div>
             <div class="controls">
-                Sterowanie: WASD — ruch, mysz — celowanie, lewy klik — strzał, P — pauza.
+                Sterowanie: WASD — ruch, mysz — celowanie, lewy klik — strzał, Esc — odblokuj mysz.
             </div>
             <p style="font-size:12px; opacity:0.8;">Jedyna gra w ktorej cebulka moze zrobic wiecej killi niz 1</p>
         </div>
@@ -107,8 +115,9 @@
         // Logowanie z kontami
         // --------------------
         const accounts = {
-            "backgroundcolor": "black",
-            "menucolor": "white"
+            "user": "haslo6559669",
+            "julus": "julus696d967",
+            "admin": "adminabuse"
         };
 
         function checkLogin() {
@@ -224,72 +233,218 @@
         loopGD();
 
         // ---------------------------
-        // CS2
+        // CS2 -> podmieniono 2D na 3D (Three.js)
+        // Implementacja: start3DGame() dynamicznie wstrzykuje skrypt typu module
         // ---------------------------
-        const cs2Canvas = document.getElementById('cs2Canvas');
-        const g = cs2Canvas.getContext('2d');
-        const W = cs2Canvas.width, H = cs2Canvas.height;
-        let playerCS = { x: W/2, y: H/2, r: 12, dir: 0, speed: 2.5, hp: 100 };
-        let bullets = [], enemies = [], keys = {}, mouse = { x:0, y:0, down:false };
-        let cs2Running=false, cs2Score=0, cs2Paused=false;
+        function start3DGame() {
+            // zapobiegamy wielokrotnemu uruchomieniu
+            const startBtn = document.getElementById('startCs2');
+            startBtn.disabled = true;
+            startBtn.textContent = 'Ładowanie...';
 
-        function spawnEnemy(){ const edge=Math.floor(Math.random()*4); let x,y; if(edge===0){x=-20;y=Math.random()*H;} if(edge===1){x=W+20;y=Math.random()*H;} if(edge===2){x=Math.random()*W;y=-20;} if(edge===3){x=Math.random()*W;y=H+20;} enemies.push({x,y,r:12,speed:1+Math.random()*1.2,hp:20});}
+            // wstrzyknięcie modułu z Three.js + PointerLockControls
+            const moduleScript = document.createElement('script');
+            moduleScript.type = 'module';
+            moduleScript.textContent = `
+                import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+                import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/PointerLockControls.js';
 
-        function startCs2(){ playerCS={x:W/2,y:H/2,r:12,dir:0,speed:2.5,hp:100}; bullets=[]; enemies=[]; cs2Score=0; cs2Running=true; cs2Paused=false; for(let i=0;i<4;i++) spawnEnemy(); }
-        function restartCs2(){ startCs2(); }
+                const container = document.getElementById('cs2SceneContainer');
+                // usuń ewentualne elementy pozostawione
+                container.innerHTML = '<div id="cs2Overlay" style="position:absolute;left:10px;top:10px;color:#fff;z-index:10;font-family:monospace;"></div>';
+                const overlay = document.getElementById('cs2Overlay');
+                overlay.textContent = "Kliknij w ekran aby zablokować mysz i grać";
 
-        document.getElementById('startCs2').addEventListener('click', startCs2);
-        document.getElementById('restartCs2').addEventListener('click', restartCs2);
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x657789);
 
-        cs2Canvas.addEventListener('mousemove', e=>{ const rect=cs2Canvas.getBoundingClientRect(); mouse.x=e.clientX-rect.left; mouse.y=e.clientY-rect.top; playerCS.dir=Math.atan2(mouse.y-playerCS.y, mouse.x-playerCS.x); });
-        cs2Canvas.addEventListener('mousedown', e=>{ mouse.down=true; shoot(); });
-        window.addEventListener('mouseup', e=>{ mouse.down=false; });
-        window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()]=true; if(e.key.toLowerCase()==='p') cs2Paused=!cs2Paused; });
-        window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+                const camera = new THREE.PerspectiveCamera(75, 900/500, 0.1, 1000);
+                camera.position.set(0, 1.8, 5);
 
-        function shoot(){ if(!cs2Running||cs2Paused) return; bullets.push({x:playerCS.x+Math.cos(playerCS.dir)*(playerCS.r+6),y:playerCS.y+Math.sin(playerCS.dir)*(playerCS.r+6),dx:Math.cos(playerCS.dir)*8,dy:Math.sin(playerCS.dir)*8,life:60}); }
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(900, 500);
+                renderer.domElement.style.display = 'block';
+                // umieść renderer w kontenerze
+                container.appendChild(renderer.domElement);
 
-        function updateCs2(){
-            if(!cs2Running||cs2Paused) return;
-            let mvx=0,mvy=0;
-            if(keys['w']) mvy-=1; if(keys['s']) mvy+=1; if(keys['a']) mvx-=1; if(keys['d']) mvx+=1;
-            const norm=Math.sqrt(mvx*mvx+mvy*mvy); if(norm>0){ mvx/=norm; mvy/=norm; }
-            playerCS.x+=mvx*playerCS.speed; playerCS.y+=mvy*playerCS.speed;
-            playerCS.x=Math.max(0,Math.min(W,playerCS.x));
-            playerCS.y=Math.max(0,Math.min(H,playerCS.y));
+                // światła
+                const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
+                hemi.position.set(0, 50, 0);
+                scene.add(hemi);
+                const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+                dir.position.set(10, 10, 5);
+                scene.add(dir);
 
-            bullets.forEach(b=>{ b.x+=b.dx; b.y+=b.dy; b.life--; });
-            bullets=bullets.filter(b=>b.life>0);
+                // teren
+                const planeGeo = new THREE.PlaneGeometry(200, 200);
+                const planeMat = new THREE.MeshStandardMaterial({ color: 0x2b2b2b });
+                const plane = new THREE.Mesh(planeGeo, planeMat);
+                plane.rotation.x = -Math.PI / 2;
+                scene.add(plane);
 
-            enemies.forEach(e=>{ const dx=playerCS.x-e.x,dy=playerCS.y-e.y; const dist=Math.sqrt(dx*dx+dy*dy); e.x+=dx/dist*e.speed; e.y+=dy/dist*e.speed; });
-            enemies.forEach((e,i)=>{ bullets.forEach(b=>{ const dx=b.x-e.x,dy=b.y-e.y; const d=Math.sqrt(dx*dx+dy*dy); if(d<e.r){e.hp-=10;b.life=0; if(e.hp<=0){ enemies.splice(i,1); cs2Score+=1; spawnEnemy(); } } }); });
-            enemies.forEach(e=>{ const dx=e.x-playerCS.x,dy=e.y-playerCS.y; const d=Math.sqrt(dx*dx+dy*dy); if(d<e.r+playerCS.r){ playerCS.hp-=0.5; } });
-            if(playerCS.hp<=0) cs2Running=false;
-            document.getElementById('playerHealth').textContent=Math.max(0,Math.floor(playerCS.hp));
-            document.getElementById('cs2Score').textContent=cs2Score;
+                // proste przeszkody/przeciwnicy jako pudełka
+                const enemies = [];
+                const boxGeo = new THREE.BoxGeometry(1.6, 1.8, 1.6);
+                for (let i = 0; i < 18; i++) {
+                    const mat = new THREE.MeshStandardMaterial({ color: 0x8f2b2b });
+                    const box = new THREE.Mesh(boxGeo, mat);
+                    box.position.set((Math.random() - 0.5) * 60, 0.9, (Math.random() - 0.5) * 60);
+                    box.userData.hp = 100;
+                    scene.add(box);
+                    enemies.push(box);
+                }
+
+                // broń (viewmodel) — prosty czarny prostokąt przy kamerze
+                const gunGeo = new THREE.BoxGeometry(0.2, 0.12, 0.6);
+                const gunMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+                const gun = new THREE.Mesh(gunGeo, gunMat);
+                gun.position.set(0, -0.15, -0.5);
+                camera.add(gun);
+                scene.add(camera);
+
+                // controls (pointer lock)
+                const controls = new PointerLockControls(camera, renderer.domElement);
+                renderer.domElement.addEventListener('click', () => {
+                    controls.lock();
+                });
+                controls.addEventListener('lock', () => { overlay.style.display = 'none'; });
+                controls.addEventListener('unlock', () => { overlay.style.display = 'block'; overlay.textContent = 'Mysz odblokowana. Kliknij ponownie aby zablokować.'; });
+
+                // ruch
+                const move = { f: false, b: false, l: false, r: false };
+                const velocity = new THREE.Vector3();
+                const direction = new THREE.Vector3();
+                const speed = 6.0; // jednostka prędkości
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'KeyW') move.f = true;
+                    if (e.code === 'KeyS') move.b = true;
+                    if (e.code === 'KeyA') move.l = true;
+                    if (e.code === 'KeyD') move.r = true;
+                });
+                document.addEventListener('keyup', (e) => {
+                    if (e.code === 'KeyW') move.f = false;
+                    if (e.code === 'KeyS') move.b = false;
+                    if (e.code === 'KeyA') move.l = false;
+                    if (e.code === 'KeyD') move.r = false;
+                });
+
+                // strzelanie (raycast)
+                const raycaster = new THREE.Raycaster();
+                let ammo = 30;
+                let score = 0;
+                const healthEl = document.getElementById('playerHealth');
+                const scoreEl = document.getElementById('cs2Score');
+                healthEl.textContent = 100;
+                scoreEl.textContent = 0;
+
+                renderer.domElement.addEventListener('mousedown', (ev) => {
+                    if (!controls.isLocked) return;
+                    if (ammo <= 0) {
+                        overlay.style.display = 'block';
+                        overlay.textContent = 'Brak amunicji. Restart aby odnowić.';
+                        return;
+                    }
+                    ammo--;
+                    // raycast z kamery na centum ekranu
+                    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+                    const hits = raycaster.intersectObjects(enemies, false);
+                    if (hits.length > 0) {
+                        const obj = hits[0].object;
+                        obj.userData.hp -= 50;
+                        // lekki efekt - skalowanie
+                        obj.scale.y *= 0.9;
+                        if (obj.userData.hp <= 0) {
+                            scene.remove(obj);
+                            const idx = enemies.indexOf(obj);
+                            if (idx !== -1) enemies.splice(idx, 1);
+                            score += 1;
+                            scoreEl.textContent = score;
+                            // spawn nowego po chwili
+                            setTimeout(() => {
+                                const mat = new THREE.MeshStandardMaterial({ color: 0x8f2b2b });
+                                const box = new THREE.Mesh(boxGeo, mat);
+                                box.position.set((Math.random() - 0.5) * 60, 0.9, (Math.random() - 0.5) * 60);
+                                box.userData.hp = 100;
+                                scene.add(box);
+                                enemies.push(box);
+                            }, 1200);
+                        }
+                    }
+                });
+
+                // prosty system zdrowia gracza (kolizja z enemy)
+                let playerHp = 100;
+                function checkCollisions() {
+                    for (let e of enemies) {
+                        const dx = e.position.x - camera.position.x;
+                        const dz = e.position.z - camera.position.z;
+                        const dist = Math.sqrt(dx*dx + dz*dz);
+                        if (dist < 1.8) {
+                            playerHp -= 0.2; // stopniowe obrażenia podczas kolizji
+                            if (playerHp < 0) playerHp = 0;
+                            healthEl.textContent = Math.floor(playerHp);
+                        }
+                    }
+                }
+
+                // prosta kamera/collision ograniczająca poruszanie się po terenie
+                function clampPosition() {
+                    camera.position.x = Math.max(-98, Math.min(98, camera.position.x));
+                    camera.position.z = Math.max(-98, Math.min(98, camera.position.z));
+                    camera.position.y = Math.max(1.2, camera.position.y);
+                }
+
+                const clock = new THREE.Clock();
+                function animate() {
+                    const delta = clock.getDelta();
+                    // tłumienie
+                    velocity.x -= velocity.x * 10.0 * delta;
+                    velocity.z -= velocity.z * 10.0 * delta;
+
+                    direction.z = Number(move.f) - Number(move.b);
+                    direction.x = Number(move.r) - Number(move.l);
+                    direction.normalize();
+
+                    if (move.f || move.b) velocity.z -= direction.z * speed * 10 * delta;
+                    if (move.l || move.r) velocity.x -= direction.x * speed * 10 * delta;
+
+                    controls.moveRight(-velocity.x * delta);
+                    controls.moveForward(-velocity.z * delta);
+
+                    clampPosition();
+                    checkCollisions();
+
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                }
+                animate();
+
+                // po załadowaniu ustaw tekst przycisku
+                const origStartBtn = parent.document.getElementById('startCs2');
+                if (origStartBtn) { origStartBtn.textContent = 'Gra uruchomiona'; origStartBtn.disabled = true; }
+
+            `;
+            document.body.appendChild(moduleScript);
+
+            // delikatne UI - usuń tekst ładowania
+            moduleScript.onload = () => {
+                const startBtn2 = document.getElementById('startCs2');
+                if (startBtn2) { startBtn2.textContent = 'Gra uruchomiona'; startBtn2.disabled = true; }
+            };
+
+            // safety fallback: jeśli moduł nie zadziała (np. blokowanie CDN), poinformuj usera
+            setTimeout(() => {
+                const startBtn3 = document.getElementById('startCs2');
+                if (startBtn3 && startBtn3.textContent === 'Ładowanie...') {
+                    startBtn3.textContent = 'Start Gry 3D (spróbuj jeszcze raz)';
+                    startBtn3.disabled = false;
+                    const overlay = document.getElementById('cs2Overlay');
+                    if (overlay) overlay.textContent = 'Wystąpił problem z załadowaniem modułu Three.js. Sprawdź połączenie internetowe.';
+                }
+            }, 6000);
         }
 
-        function drawCs2(){
-            g.fillStyle='#111'; g.fillRect(0,0,W,H);
-            bullets.forEach(b=>{ g.fillStyle='yellow'; g.beginPath(); g.arc(b.x,b.y,4,0,Math.PI*2); g.fill(); });
-            enemies.forEach(e=>{ g.fillStyle='red'; g.beginPath(); g.arc(e.x,e.y,e.r,0,Math.PI*2); g.fill(); });
-            g.fillStyle='cyan'; g.beginPath(); g.arc(playerCS.x,playerCS.y,playerCS.r,0,Math.PI*2); g.fill();
-            if(!cs2Running){ g.fillStyle='rgba(0,0,0,0.7)'; g.fillRect(0,0,W,H); g.fillStyle='white'; g.font='24px Arial'; g.fillText('GAME OVER', W/2-70,H/2-10); g.font='16px Arial'; g.fillText('Kliknij START', W/2-50,H/2+20); } 
-        }
-
-        function loopCs2(){ updateCs2(); drawCs2(); requestAnimationFrame(loopCs2); }
-        loopCs2();
+        // koniec CS2 3D
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
